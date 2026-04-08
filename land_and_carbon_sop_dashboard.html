@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Land and Carbon — Ranch SOP Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root {
+    --bg: #111111;
+    --bg2: #181818;
+    --bg3: #1f1f1f;
+    --card: #1a1a1a;
+    --border: #2a2a2a;
+    --sage: #7a8c6e;
+    --sage-light: #96a882;
+    --sage-dim: #3d4a35;
+    --white: #f5f5f0;
+    --muted: #888880;
+    --accent: #8fa07e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--white); font-family: 'DM Sans', sans-serif; font-size: 16px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  h1,h2,h3,h4 { font-family: 'Playfair Display', serif; }
+  .nav-link { color: #aaa; transition: color 0.2s; cursor: pointer; font-size: 14px; font-weight: 500; letter-spacing: 0.04em; }
+  .nav-link:hover, .nav-link.active { color: var(--white); }
+  .btn-sage { background: var(--sage); color: #fff; border: none; border-radius: 4px; padding: 10px 20px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s; letter-spacing: 0.03em; font-family: 'DM Sans', sans-serif; }
+  .btn-sage:hover { background: var(--sage-light); }
+  .btn-outline { background: transparent; color: var(--sage-light); border: 1px solid var(--sage); border-radius: 4px; padding: 8px 18px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: 'DM Sans', sans-serif; }
+  .btn-outline:hover { background: var(--sage-dim); color: #fff; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; }
+  .section { padding: 80px 0; }
+  .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+  .hero-bg { background: linear-gradient(to bottom, rgba(17,17,17,0.7) 0%, rgba(17,17,17,0.85) 60%, rgba(17,17,17,1) 100%), url('https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?w=1800&q=80') center/cover no-repeat; }
+  .tag { display: inline-block; background: var(--sage-dim); color: var(--sage-light); border-radius: 3px; padding: 2px 10px; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+  .accordion-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; }
+  .accordion-body.open { max-height: 9999px; }
+  .accordion-icon { transition: transform 0.3s; }
+  .accordion-icon.open { transform: rotate(45deg); }
+  #chat-messages { height: 340px; overflow-y: auto; scroll-behavior: smooth; }
+  #chat-messages::-webkit-scrollbar { width: 4px; }
+  #chat-messages::-webkit-scrollbar-track { background: var(--bg2); }
+  #chat-messages::-webkit-scrollbar-thumb { background: var(--sage-dim); border-radius: 2px; }
+  .chat-bubble-user { background: var(--sage-dim); border-radius: 12px 12px 2px 12px; padding: 10px 16px; max-width: 80%; margin-left: auto; font-size: 14px; }
+  .chat-bubble-bot { background: var(--bg3); border: 1px solid var(--border); border-radius: 12px 12px 12px 2px; padding: 12px 16px; max-width: 90%; font-size: 14px; line-height: 1.65; }
+  .chat-bubble-bot strong { color: var(--sage-light); }
+  .prompt-chip { background: var(--bg3); border: 1px solid var(--border); border-radius: 20px; padding: 8px 16px; font-size: 12px; cursor: pointer; color: #bbb; transition: all 0.2s; white-space: nowrap; }
+  .prompt-chip:hover { border-color: var(--sage); color: var(--white); }
+  .search-input { background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; padding: 12px 16px; color: var(--white); font-size: 14px; width: 100%; outline: none; transition: border-color 0.2s; font-family: 'DM Sans', sans-serif; }
+  .search-input:focus { border-color: var(--sage); }
+  .sop-item { border-bottom: 1px solid var(--border); padding: 20px 0; cursor: pointer; }
+  .sop-item:last-child { border-bottom: none; }
+  .typing-dot { width: 6px; height: 6px; background: var(--sage); border-radius: 50%; animation: blink 1.2s infinite; }
+  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes blink { 0%,80%,100%{opacity:0.2} 40%{opacity:1} }
+  .section-tab { padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.2s; border: 1px solid transparent; }
+  .section-tab.active { background: var(--sage-dim); color: var(--sage-light); border-color: var(--sage-dim); }
+  .section-tab:not(.active) { color: var(--muted); }
+  .section-tab:not(.active):hover { color: var(--white); }
+  .logo-img { filter: invert(1); height: 38px; }
+  pre { white-space: pre-wrap; word-break: break-word; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 13px; }
+  th { background: var(--sage-dim); color: var(--sage-light); padding: 8px 12px; text-align: left; }
+  td { border-bottom: 1px solid var(--border); padding: 8px 12px; vertical-align: top; }
+  .sop-content h2 { font-size: 1.3rem; margin: 24px 0 8px; color: var(--sage-light); }
+  .sop-content h3 { font-size: 1.05rem; margin: 18px 0 6px; color: #ccc; }
+  .sop-content p { margin-bottom: 10px; font-size: 14px; line-height: 1.7; color: #ccc; }
+  .sop-content ul, .sop-content ol { margin: 8px 0 12px 20px; font-size: 14px; color: #ccc; }
+  .sop-content li { margin-bottom: 4px; }
+  .sop-content blockquote { border-left: 3px solid var(--sage); padding-left: 14px; color: #aaa; font-style: italic; margin: 12px 0; }
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 1000; display: none; overflow-y: auto; }
+  .modal-overlay.open { display: flex; align-items: flex-start; justify-content: center; padding: 40px 16px; }
+  .modal-box { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; max-width: 860px; width: 100%; padding: 40px; position: relative; }
+  .modal-close { position: absolute; top: 20px; right: 20px; background: var(--bg3); border: 1px solid var(--border); border-radius: 50%; width: 36px; height: 36px; cursor: pointer; color: #aaa; font-size: 18px; display: flex; align-items: center; justify-content: center; transition: color 0.2s; }
+  .modal-close:hover { color: #fff; }
+  @media(max-width:768px) {
+    .section { padding: 48px 0; }
+    .container { padding: 0 16px; }
+    .modal-box { padding: 24px 18px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===================== HEADER / NAV ===================== -->
+<header style="position:sticky;top:0;z-index:50;background:rgba(17,17,17,0.95);border-bottom:1px solid var(--border);backdrop-filter:blur(10px);">
+  <div class="container" style="display:flex;align-items:center;justify-content:space-between;height:64px;">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div style="width:28px;height:28px;border:2px solid #f5f5f0;border-radius:3px;display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-weight:700;font-size:13px;color:#f5f5f0;flex-shrink:0;letter-spacing:-0.02em;">LC</div>
+      <span style="font-family:'Playfair Display',serif;font-size:15px;font-weight:600;color:#f5f5f0;letter-spacing:0.04em;">Land &amp; Carbon</span>
+    </div>
+    <nav style="display:flex;gap:28px;align-items:center;" class="hidden md:flex">
+      <span class="nav-link active" onclick="scrollToSection('overview')">Overview</span>
+      <span class="nav-link" onclick="scrollToSection('vision')">Vision</span>
+      <span class="nav-link" onclick="scrollToSection('summaries')">Summaries</span>
+      <span class="nav-link" onclick="scrollToSection('library')">Full SOP Library</span>
+      <span class="nav-link" onclick="scrollToSection('advisor')">Ranch Advisor</span>
+    </nav>
+    <button class="btn-sage hidden md:block" onclick="scrollToSection('advisor')" style="font-size:12px;padding:8px 16px;">Ask the Advisor</button>
+    <button onclick="toggleMobileMenu()" class="md:hidden" style="background:none;border:none;color:#aaa;font-size:22px;cursor:pointer;">☰</button>
+  </div>
+  <div id="mobile-menu" style="display:none;border-top:1px solid var(--border);padding:16px 24px;display:flex;flex-direction:column;gap:16px;background:rgba(17,17,17,0.98);">
+    <span class="nav-link" onclick="scrollToSection('overview');toggleMobileMenu()">Overview</span>
+    <span class="nav-link" onclick="scrollToSection('summaries');toggleMobileMenu()">Summaries</span>
+    <span class="nav-link" onclick="scrollToSection('library');toggleMobileMenu()">Full SOP Library</span>
+    <span class="nav-link" onclick="scrollToSection('advisor');toggleMobileMenu()">Ranch Advisor</span>
+  </div>
+</header>
+
+<!-- ===================== HERO ===================== -->
+<section class="hero-bg" style="padding:100px 0 80px;" id="overview">
+  <div class="container" style="max-width:800px;">
+    <div class="tag" style="margin-bottom:20px;">Land and Carbon</div>
+    <h1 style="font-size:clamp(2.4rem,5vw,3.8rem);line-height:1.15;font-weight:700;margin-bottom:20px;">Ranch SOP Dashboard</h1>
+    <p style="font-size:1.1rem;color:#bbb;max-width:560px;margin-bottom:36px;line-height:1.7;">Clear procedures for daily ranch operations and land stewardship. Everything your team needs — from grazing rotations to drought response — in one place.</p>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;">
+      <button class="btn-sage" onclick="scrollToSection('summaries')" style="padding:14px 28px;font-size:14px;">Browse SOPs</button>
+      <button class="btn-outline" onclick="scrollToSection('advisor')" style="padding:14px 28px;font-size:14px;">Ask the Ranch Advisor →</button>
+    </div>
+    <div style="display:flex;gap:32px;margin-top:48px;flex-wrap:wrap;">
+      <div><div style="font-size:2rem;font-family:'Playfair Display',serif;font-weight:700;color:var(--sage-light);">7</div><div style="font-size:12px;color:#888;text-transform:uppercase;letter-spacing:0.06em;">Core SOPs</div></div>
+      <div><div style="font-size:2rem;font-family:'Playfair Display',serif;font-weight:700;color:var(--sage-light);">3</div><div style="font-size:12px;color:#888;text-transform:uppercase;letter-spacing:0.06em;">Management Domains</div></div>
+      <div><div style="font-size:2rem;font-family:'Playfair Display',serif;font-weight:700;color:var(--sage-light);">20yr</div><div style="font-size:12px;color:#888;text-transform:uppercase;letter-spacing:0.06em;">Transition Horizon</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== VISION STATEMENT ===================== -->
+<section style="background:#111111;padding:80px 0;border-bottom:1px solid var(--border);" id="vision">
+  <div class="container" style="max-width:860px;">
+    <div class="tag" style="margin-bottom:24px;">Our Conviction</div>
+    <div style="display:flex;flex-direction:column;gap:24px;">
+      <p style="font-size:1.15rem;line-height:1.85;color:#d0d0c8;font-family:'DM Sans',sans-serif;">Land and Carbon operates on a single conviction: that the most degraded land holds the greatest potential, and that potential is unlocked not by fighting nature but by working within it.</p>
+      <p style="font-size:1rem;line-height:1.85;color:#aaa;">The ranches we acquire are not broken — they are depleted. The soil biology is suppressed, the forage is diminished, the genetics are mismatched, and the economics reflect all of it. Our work is restoration: rebuilding the ecological engine beneath the grass so that everything above it — the animals, the carbon, the financial returns — compounds over time rather than declines.</p>
+      <p style="font-size:1rem;line-height:1.85;color:#aaa;">We do this because we understand that biology precedes economics. Profit is not extracted from land; it is grown from it. Every management decision we make — how long the grass rests, which animals stay in the herd, whether we reach for a chemical or wait for adaptation — is an investment in a biological system that will either build or erode. We choose to build. That means our horizon is not the next sale or the next season. It is the next decade, and the one after that.</p>
+      <p style="font-size:1rem;line-height:1.85;color:#aaa;">The world has no shortage of people willing to take from the land. We are building something rarer: an organization that knows how to give it back — and that understands, from the evidence of practitioners across four continents, that restoration and profitability are not in tension. They are the same project, measured over the right timeframe.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== SUMMARY DASHBOARD ===================== -->
+<section class="section" id="summaries" style="background:var(--bg2);">
+  <div class="container">
+    <div style="margin-bottom:48px;">
+      <div class="tag" style="margin-bottom:12px;">Quick Reference</div>
+      <h2 style="font-size:clamp(1.8rem,3vw,2.6rem);margin-bottom:12px;">SOP Summary Cards</h2>
+      <p style="color:var(--muted);max-width:500px;">Key information from every SOP at a glance. Tap "View Full SOP" for the complete procedure.</p>
+    </div>
+
+    <!-- Category tabs -->
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:36px;" id="cat-tabs">
+      <div class="section-tab active" onclick="filterCards('all',this)">All SOPs</div>
+      <div class="section-tab" onclick="filterCards('grazing',this)">Grazing Management</div>
+      <div class="section-tab" onclick="filterCards('livestock',this)">Livestock & Genetics</div>
+      <div class="section-tab" onclick="filterCards('infrastructure',this)">Infrastructure</div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:24px;" id="sop-cards">
+
+      <!-- SOP 02 -->
+      <div class="card" data-cat="grazing" style="padding:28px;display:flex;flex-direction:column;gap:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+          <div>
+            <div class="tag" style="margin-bottom:8px;">Grazing Management</div>
+            <h3 style="font-size:1.1rem;line-height:1.3;">Grazing Planning & Rotation Design</h3>
+          </div>
+          <div style="width:40px;height:40px;border-radius:50%;background:var(--sage-dim);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;">🗺️</div>
+        </div>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:8px;">
+          <li style="display:flex;gap:8px;font-size:13px;color:#bbb;"><span style="color:var(--sage);margin-top:2px;">✓</span>Core formula: Number of camps = Rest period (days) ÷ Occupation time per camp (days). Never cut rest periods short for convenience</li>
+          <li style="display:flex;gap:8px;font-size:13px;color:#bbb;"><span style="color:var(--sage);margin-top:2px;">✓</span>In high-quality forage environments use Long-Rest Continuous Rotation; in sourveld or warm-season dominant systems use Three-Zone Adaptive Grazing (TZAG)</li>
+          <li style="display:flex;gap:8px;font-size:13px;color:#bbb;"><span style="color:var(--sage);margin-top:2px;">✓</span>Distinguish overstocked (too many animals) from overgrazed (rest too short) — different problems, different fixes</li>
+          <li style="display:flex;gap:8px;font-size:13px;color:#bbb;"><span style="color:var(--sage);margin-top:2px;">✓</span>If rumen fill drops below 85% at day-start: increase camp size or move immediately</li>
+        </ul>
+        <button class="btn-sage" style="margin-top:auto;width:100%;" onclick="openModal('sop02')">View Full SOP →</button>
+      </div>
+
+      <!-- SOP 03 -->
+      <div class="card" data-cat="grazing" style="padding:28px;display:flex;flex-direction:column;gap:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+          <div>
+            <div class="tag" style="margin-bottom:8px;">Grazing Management</div>
+            <h3 style="font-size:1.1rem;line-height:1.3;">Seasonal Grazing Management</h3>
+          </div>
+          <div style="width:40px;height:40px;border-radius:50%;background:var(--sage-dim);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;">🌦️</div>
+        </div>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:8px;">
+          <li style="display:flex;gap:8px;font-size:13px;color:#bbb;"><span style="color:var(--sage);margin-top:2px;">✓</span>Four annual phases: pre-season preparation → growing season → seasonal transition → non-growing season. Know which phase you're in</li>
+          <li style="display:flex;gap:8px;font-size:13px;color:#bbb;"><span style="color:var(--sage);margin-top:2px;">✓</span>Align calving window with the seasonal nutrition peak — this is your highest-leverage management decision of the year</li>
+          <li style="display:flex;gap:8px;font-size:13px;color:#bbb;"><span style="color:var(--sage);margin-top:2px;">✓</span>Seasonal transitions are highest-risk — enter the non-growing season with good BCS, adequate stockpile, and protein supplement in position</li>
+          <li style="display:flex;gap:8px;font-size:13px;color:#bbb;"><span style="color:var(--sage);margin-top:2px;">✓</span>Lengthen rest periods in the dry/dormant season; shorten cautiously during active peak growth only</li>
+        </ul>
+        <button class="btn-sage" style="margin-top:auto;width:100%;" onclick="openModal('sop03')">View Full SOP →</button>
+      </div>
+
+      <!-- SOP 04 -->
+      <div class="card" data-cat="grazing" style="padding:28px;display:flex;flex-direction:column;gap:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+          <div>
+            <div class="tag" style="margin-bottom:8px;">Drought Response</div>
+            <h3 style="font-size:1.1rem;line-height:1.3;">Drought Management & Resilience</h3>
+          </div>
+          <div style="width:40px;height:40px;border-radius:50%;background:var(--sage-dim);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;">☀️</div>
+        </div>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:8px;">
+          <li style="display:flex;gap:8px;font-size:13px;color:#bbb;"><span style="color:var(--sage);margin-top:2px;">✓</span>Set your Body Condition Floor before drought arrives — when BCS hits the floor, destock or supplement regardless of market or sentiment</li>
+          <li style="display:flex;gap:8px;font-size:13px;color:#bbb;"><span style="color:var(--sage);margin-top:2px;">✓</span>Early destocking is a management response; late forced destocking is a financial crisis. Sell early — never wait</li>
+          <li style="display:flex;gap:8px;font-size:13px;color:#bbb;"><span style="color:var(--sage);margin-top:2px;">✓</span>Destock in order: first to sell are low-value, poor-adapted, or surplus animals; retain your best genetics at all costs</li>
+          <li style="display:flex;gap:8px;font-size:13px;color:#bbb;"><span style="color:var(--sage);margin-top:2px;">✓</span>After drought breaks: rest the land before restocking — do not rush animals back onto recovering pasture</li>
+        </ul>
+        <button class="btn-sage" style="margin-top:auto;width:100%;" onclick="openModal('sop04')">View Full SOP →</button>
+      </div>
+
+      <!-- SOP 05 -->
+      <div class="card" data-cat="livestock" style="padding:28px;display:flex;flex-direction:column;gap:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+          <div>
+            <div class="tag" style="margin-bottom:8px;">Genetics</div>
+            <h3 style="font-size:1.1rem;line-height:1.3;">Animal Genetics & Breed Selection</h3>
+          </div>
+          <div style="width:40px;height:40px;border-radius:50%;background:var(--sage-dim);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;">🐄</div>
+        </div>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:8px;">
+          <li style="display:flex;gap:8px;font-size:13px;color:#bbb;"><span style="color:var(--sage);margin-top:2px;">✓</span>Three non-negotiable traits: inherent body condition (fatness gene), hormonal balance (sexual dimorphism), and calving ease (sloping rump)</li>
+          <li style="display:flex;gap:8px;font-size:13px;color:#bbb;"><span style="color:var(--sage);margin-top:2px;">✓</span>Select from "2+3 dams" — the dam's mother first calved at 2, then again at 3, unassisted on available forage. This is your fertility foundation</li>
+          <li style="display:flex;gap:8px;font-size:13px;color:#bbb;"><span style="color:var(--sage);margin-top:2px;">✓</span>Cull any cow requiring calving assistance, regardless of other performance — calving difficulty is a non-negotiable removal criterion</li>
+          <li style="display:flex;gap:8px;font-size:13px;color:#bbb;"><span style="color:var(--sage);margin-top:2px;">✓</span>Read animals in context: a thin cow on poor ground may be genetically superior to a fat cow on high inputs. Phenotype ≠ genotype</li>
+        </ul>
+        <button class="btn-sage" style="margin-top:auto;width:100%;" onclick="openModal('sop05')">View Full SOP →</button>
+      </div>
+
+      <!-- SOP 06 -->
+      <div class="card" data-cat="livestock" style="padding:28px;display:flex;flex-direction:column;gap:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+          <div>
+            <div class="tag" style="margin-bottom:8px;">Livestock Nutrition</div>
+            <h3 style="font-size:1.1rem;line-height:1.3;">Livestock Nutrition</h3>
+          </div>
+          <div style="width:40px;height:40px;border-radius:50%;background:var(--sage-dim);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;">🌾</div>
+        </div>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:8px;">
+          <li style="display:flex;gap:8px;font-size:13px;color:#bbb;"><span style="color:var(--sage);margin-top:2px;">✓</span>Grass is the primary feed budget. Only supplement to bridge specific, identified gaps — not out of habit or "more is better" thinking</li>
+          <li style="display:flex;gap:8px;font-size:13px;color:#bbb;"><span style="color:var(--sage);margin-top:2px;">✓</span>Three field monitoring tools: rumen fill (check 3× daily), body condition score (daily when moving daily, monthly minimum otherwise), and fecal consistency — no lab required</li>
+          <li style="display:flex;gap:8px;font-size:13px;color:#bbb;"><span style="color:var(--sage);margin-top:2px;">✓</span>Protein supplement during the non-growing season when forage drops below rumen function threshold — this is the first and most important supplement</li>
+          <li style="display:flex;gap:8px;font-size:13px;color:#bbb;"><span style="color:var(--sage);margin-top:2px;">✓</span>Urea danger: fatal at >1g/kg body weight. Dilute carefully, never feed hungry animals, and never exceed label rates</li>
+        </ul>
+        <button class="btn-sage" style="margin-top:auto;width:100%;" onclick="openModal('sop06')">View Full SOP →</button>
+      </div>
+
+      <!-- Infrastructure -->
+      <div class="card" data-cat="infrastructure" style="padding:28px;display:flex;flex-direction:column;gap:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+          <div>
+            <div class="tag" style="margin-bottom:8px;">Infrastructure</div>
+            <h3 style="font-size:1.1rem;line-height:1.3;">Infrastructure Development Standard</h3>
+          </div>
+          <div style="width:40px;height:40px;border-radius:50%;background:var(--sage-dim);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;">🏗️</div>
+        </div>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:8px;">
+          <li style="display:flex;gap:8px;font-size:13px;color:#bbb;"><span style="color:var(--sage);margin-top:2px;">✓</span>Genetics drive the timeline — infrastructure follows. The genetic shift (8–12 years) is the constraint, not the fencing or water systems</li>
+          <li style="display:flex;gap:8px;font-size:13px;color:#bbb;"><span style="color:var(--sage);margin-top:2px;">✓</span>Tier 1 (non-negotiable before cattle): water security and perimeter fence integrity. Never place cattle without these</li>
+          <li style="display:flex;gap:8px;font-size:13px;color:#bbb;"><span style="color:var(--sage);margin-top:2px;">✓</span>Tier 2 (Year 1): basic processing capability (weigh scale, AI chute) and the genetics programme running — these compound value from day one</li>
+          <li style="display:flex;gap:8px;font-size:13px;color:#bbb;"><span style="color:var(--sage);margin-top:2px;">✓</span>Virtual fencing (Vence/Halter) is compressing the infrastructure timeline — assess cell coverage before acquisition</li>
+        </ul>
+        <button class="btn-sage" style="margin-top:auto;width:100%;" onclick="openModal('infra')">View Full SOP →</button>
+      </div>
+
+      <!-- SOP 01 -->
+      <div class="card" data-cat="grazing" style="padding:28px;display:flex;flex-direction:column;gap:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+          <div>
+            <div class="tag" style="margin-bottom:8px;">Grazing Management</div>
+            <h3 style="font-size:1.1rem;line-height:1.3;">UHDG Principles & Setup</h3>
+          </div>
+          <div style="width:40px;height:40px;border-radius:50%;background:var(--sage-dim);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;">🌿</div>
+        </div>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:8px;">
+          <li style="display:flex;gap:8px;font-size:13px;color:#bbb;"><span style="color:var(--sage);margin-top:2px;">✓</span>Concentrate animals at very high density on small areas, move frequently — then allow extended rest and recovery before returning</li>
+          <li style="display:flex;gap:8px;font-size:13px;color:#bbb;"><span style="color:var(--sage);margin-top:2px;">✓</span>Monitor rumen fill 3× daily; record body condition score daily when moving cattle daily — condition trend is your primary decision-making guide, not a calendar</li>
+          <li style="display:flex;gap:8px;font-size:13px;color:#bbb;"><span style="color:var(--sage);margin-top:2px;">✓</span>Energiser voltage must exceed 3,000V at the furthest point — check daily; water infrastructure must be in place before starting</li>
+          <li style="display:flex;gap:8px;font-size:13px;color:#bbb;"><span style="color:var(--sage);margin-top:2px;">✓</span>A calm, purposefully grazing mob signals a well-functioning system; restlessness or fence-testing means investigate immediately</li>
+        </ul>
+        <button class="btn-sage" style="margin-top:auto;width:100%;" onclick="openModal('sop01')">View Full SOP →</button>
+      </div>
+
+      <!-- TZAG Framework -->
+      <div class="card" data-cat="grazing" style="padding:28px;display:flex;flex-direction:column;gap:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+          <div>
+            <div class="tag" style="margin-bottom:8px;">Framework — Grazing</div>
+            <h3 style="font-size:1.1rem;line-height:1.3;">Three-Zone Adaptive Grazing (TZAG)</h3>
+          </div>
+          <div style="width:40px;height:40px;border-radius:50%;background:var(--sage-dim);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;">🗂️</div>
+        </div>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:8px;">
+          <li style="display:flex;gap:8px;font-size:13px;color:#bbb;"><span style="color:var(--sage);margin-top:2px;">✓</span>For warm-season dominant and sourveld systems: divide property into Zone 1 (intensive UHDG during growing season), Zone 2 (seasonal buffer), Zone 3 (full rest + stockpile)</li>
+          <li style="display:flex;gap:8px;font-size:13px;color:#bbb;"><span style="color:var(--sage);margin-top:2px;">✓</span>Rotate zone assignments annually — no area stays in Zone 1 for consecutive years or it degrades from planned overgraze to genuine damage</li>
+          <li style="display:flex;gap:8px;font-size:13px;color:#bbb;"><span style="color:var(--sage);margin-top:2px;">✓</span>Zone 3 is your drought insurance. Always build it; never consume it early unless the alternative is forced destocking</li>
+          <li style="display:flex;gap:8px;font-size:13px;color:#bbb;"><span style="color:var(--sage);margin-top:2px;">✓</span>Reassign zone boundaries each year based on current forage condition, not fixed fences — best species composition areas go to Zone 1</li>
+        </ul>
+        <button class="btn-sage" style="margin-top:auto;width:100%;" onclick="openModal('tzag')">View Full SOP →</button>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ===================== FULL SOP LIBRARY ===================== -->
+<section class="section" id="library">
+  <div class="container">
+    <div style="margin-bottom:40px;">
+      <div class="tag" style="margin-bottom:12px;">Complete Reference</div>
+      <h2 style="font-size:clamp(1.8rem,3vw,2.6rem);margin-bottom:12px;">Full SOP Library</h2>
+      <p style="color:var(--muted);max-width:500px;margin-bottom:24px;">Search and expand any SOP for complete, original procedural text — every step, checklist, and safety note.</p>
+      <input class="search-input" id="sop-search" type="text" placeholder="Search procedures, topics, keywords…" oninput="filterSOPs()" style="max-width:480px;" />
+    </div>
+
+    <div class="card" style="overflow:hidden;" id="sop-list">
+
+      <!-- SOP 02 -->
+      <div class="sop-item" id="lib-sop02">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;" onclick="toggleAccordion('acc02')">
+          <div>
+            <div style="font-size:12px;color:var(--sage);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">Grazing Management</div>
+            <div style="font-size:1rem;font-weight:600;">Grazing Planning & Rotation Design</div>
+            <div style="font-size:13px;color:#888;margin-top:4px;">Rotation design, rest period calculation, LRCR vs TZAG strategy selection</div>
+          </div>
+          <span class="accordion-icon" id="icon-acc02" style="font-size:22px;color:var(--sage);flex-shrink:0;">+</span>
+        </div>
+        <div class="accordion-body" id="acc02">
+          <div class="sop-content" style="padding:24px 0 8px;border-top:1px solid var(--border);margin-top:16px;" id="content-sop02">
+            <div style="text-align:center;padding:40px;color:#888;">Loading SOP content…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SOP 03 -->
+      <div class="sop-item" id="lib-sop03">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;" onclick="toggleAccordion('acc03')">
+          <div>
+            <div style="font-size:12px;color:var(--sage);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">Grazing Management</div>
+            <div style="font-size:1rem;font-weight:600;">Seasonal Grazing Management</div>
+            <div style="font-size:13px;color:#888;margin-top:4px;">Managing UHDG through the full annual seasonal cycle</div>
+          </div>
+          <span class="accordion-icon" id="icon-acc03" style="font-size:22px;color:var(--sage);flex-shrink:0;">+</span>
+        </div>
+        <div class="accordion-body" id="acc03">
+          <div class="sop-content" style="padding:24px 0 8px;border-top:1px solid var(--border);margin-top:16px;" id="content-sop03">
+            <div style="text-align:center;padding:40px;color:#888;">Loading SOP content…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SOP 04 -->
+      <div class="sop-item" id="lib-sop04">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;" onclick="toggleAccordion('acc04')">
+          <div>
+            <div style="font-size:12px;color:var(--sage);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">Drought Response</div>
+            <div style="font-size:1rem;font-weight:600;">Drought Management & Resilience</div>
+            <div style="font-size:13px;color:#888;margin-top:4px;">Early recognition, response sequence, herd and land management through drought</div>
+          </div>
+          <span class="accordion-icon" id="icon-acc04" style="font-size:22px;color:var(--sage);flex-shrink:0;">+</span>
+        </div>
+        <div class="accordion-body" id="acc04">
+          <div class="sop-content" style="padding:24px 0 8px;border-top:1px solid var(--border);margin-top:16px;" id="content-sop04">
+            <div style="text-align:center;padding:40px;color:#888;">Loading SOP content…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SOP 05 -->
+      <div class="sop-item" id="lib-sop05">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;" onclick="toggleAccordion('acc05')">
+          <div>
+            <div style="font-size:12px;color:var(--sage);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">Livestock & Genetics</div>
+            <div style="font-size:1rem;font-weight:600;">Animal Genetics & Breed Selection</div>
+            <div style="font-size:13px;color:#888;margin-top:4px;">Selection philosophy, breed comparison, bull and heifer development</div>
+          </div>
+          <span class="accordion-icon" id="icon-acc05" style="font-size:22px;color:var(--sage);flex-shrink:0;">+</span>
+        </div>
+        <div class="accordion-body" id="acc05">
+          <div class="sop-content" style="padding:24px 0 8px;border-top:1px solid var(--border);margin-top:16px;" id="content-sop05">
+            <div style="text-align:center;padding:40px;color:#888;">Loading SOP content…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SOP 06 -->
+      <div class="sop-item" id="lib-sop06">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;" onclick="toggleAccordion('acc06')">
+          <div>
+            <div style="font-size:12px;color:var(--sage);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">Livestock & Nutrition</div>
+            <div style="font-size:1rem;font-weight:600;">Livestock Nutrition</div>
+            <div style="font-size:13px;color:#888;margin-top:4px;">Grass-first nutrition, field monitoring, protein & mineral supplementation, urea safety</div>
+          </div>
+          <span class="accordion-icon" id="icon-acc06" style="font-size:22px;color:var(--sage);flex-shrink:0;">+</span>
+        </div>
+        <div class="accordion-body" id="acc06">
+          <div class="sop-content" style="padding:24px 0 8px;border-top:1px solid var(--border);margin-top:16px;" id="content-sop06">
+            <div style="text-align:center;padding:40px;color:#888;">Loading SOP content…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Infrastructure -->
+      <div class="sop-item" id="lib-infra">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;" onclick="toggleAccordion('acc-infra')">
+          <div>
+            <div style="font-size:12px;color:var(--sage);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">Infrastructure Standard</div>
+            <div style="font-size:1rem;font-weight:600;">Ranch Acquisition & Infrastructure Development</div>
+            <div style="font-size:13px;color:#888;margin-top:4px;">Pre-acquisition checklist, water, fencing, processing facilities, 20-year transition plan</div>
+          </div>
+          <span class="accordion-icon" id="icon-acc-infra" style="font-size:22px;color:var(--sage);flex-shrink:0;">+</span>
+        </div>
+        <div class="accordion-body" id="acc-infra">
+          <div class="sop-content" style="padding:24px 0 8px;border-top:1px solid var(--border);margin-top:16px;" id="content-infra">
+            <div style="text-align:center;padding:40px;color:#888;">Loading SOP content…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SOP 01 accordion -->
+      <div class="sop-item" id="lib-sop01">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;" onclick="toggleAccordion('acc01')">
+          <div>
+            <div style="font-size:12px;color:var(--sage);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">Grazing Management</div>
+            <div style="font-size:1rem;font-weight:600;">UHDG: Principles & Setup</div>
+            <div style="font-size:13px;color:#888;margin-top:4px;">Foundational document — what UHDG is, why it works, how to set up the system</div>
+          </div>
+          <span class="accordion-icon" id="icon-acc01" style="font-size:22px;color:var(--sage);flex-shrink:0;">+</span>
+        </div>
+        <div class="accordion-body" id="acc01">
+          <div class="sop-content" style="padding:24px 0 8px;border-top:1px solid var(--border);margin-top:16px;" id="content-sop01">
+            <div style="text-align:center;padding:40px;color:#888;">Loading SOP content…</div>
+          </div>
+        </div>
+      </div>
+
+      
+      <!-- TZAG -->
+      <div class="sop-item" id="lib-tzag" style="border-bottom:none;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;" onclick="toggleAccordion('acc-tzag')">
+          <div>
+            <div style="font-size:12px;color:var(--sage);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">Framework — Grazing</div>
+            <div style="font-size:1rem;font-weight:600;">Three-Zone Adaptive Grazing (TZAG) Framework</div>
+            <div style="font-size:13px;color:#888;margin-top:4px;">Spatial zone strategy for warm-season dominant and sourveld systems</div>
+          </div>
+          <span class="accordion-icon" id="icon-acc-tzag" style="font-size:22px;color:var(--sage);flex-shrink:0;">+</span>
+        </div>
+        <div class="accordion-body" id="acc-tzag">
+          <div class="sop-content" style="padding:24px 0 8px;border-top:1px solid var(--border);margin-top:16px;" id="content-tzag">
+            <div style="text-align:center;padding:40px;color:#888;">Loading SOP content…</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ===================== RANCH ADVISOR ===================== -->
+<section class="section" id="advisor" style="background:var(--bg2);">
+  <div class="container">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start;" class="advisor-grid">
+      <div>
+        <div class="tag" style="margin-bottom:12px;">AI-Powered</div>
+        <h2 style="font-size:clamp(1.8rem,3vw,2.6rem);margin-bottom:16px;">Ask the Ranch SOP Advisor</h2>
+        <p style="color:var(--muted);margin-bottom:32px;line-height:1.8;">Get straight, actionable answers drawn from the Land and Carbon SOP library. Ask about any ranch procedure — grazing, livestock, drought response, nutrition, infrastructure.</p>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div style="display:flex;align-items:flex-start;gap:12px;">
+            <div style="width:32px;height:32px;border-radius:50%;background:var(--sage-dim);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;">⚡</div>
+            <div><div style="font-weight:600;font-size:14px;margin-bottom:2px;">Instant SOP Reference</div><div style="font-size:13px;color:#888;">Draws from all 7 SOPs and supporting frameworks</div></div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:12px;">
+            <div style="width:32px;height:32px;border-radius:50%;background:var(--sage-dim);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;">🎯</div>
+            <div><div style="font-weight:600;font-size:14px;margin-bottom:2px;">Practical, Field-Ready Answers</div><div style="font-size:13px;color:#888;">Clear steps, not theory — suitable for use in the paddock</div></div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:12px;">
+            <div style="width:32px;height:32px;border-radius:50%;background:var(--sage-dim);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;">📋</div>
+            <div><div style="font-weight:600;font-size:14px;margin-bottom:2px;">Safety-First Approach</div><div style="font-size:13px;color:#888;">Flags hazards and critical decision points automatically</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card" style="padding:0;overflow:hidden;">
+          <!-- Chat messages area -->
+          <div id="chat-messages" style="padding:20px;display:flex;flex-direction:column;gap:14px;">
+            <div class="chat-bubble-bot">
+              <strong>Ranch SOP Advisor</strong><br/>
+              I'm your Land and Carbon Ranch SOP Advisor. I have the full Land and Carbon SOP library loaded. Ask me anything about grazing, livestock management, drought response, nutrition, genetics, or infrastructure. What do you need?
+            </div>
+          </div>
+          <!-- Input -->
+          <div style="padding:16px;border-top:1px solid var(--border);display:flex;gap:10px;background:var(--bg3);">
+            <input id="chat-input" class="search-input" type="text" placeholder="Ask a ranch question…" style="flex:1;" onkeydown="if(event.key==='Enter')sendMessage()" />
+            <button class="btn-sage" onclick="sendMessage()" style="flex-shrink:0;padding:10px 18px;">Send</button>
+          </div>
+        </div>
+
+        <!-- Example prompts -->
+        <div style="margin-top:16px;">
+          <div style="font-size:12px;color:#666;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.06em;">Try asking</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;">
+            <div class="prompt-chip" onclick="askPrompt(this)">What do I do when I find a sick calf?</div>
+            <div class="prompt-chip" onclick="askPrompt(this)">How do I move the herd to a new camp?</div>
+            <div class="prompt-chip" onclick="askPrompt(this)">The grass isn't recovering — what's wrong?</div>
+            <div class="prompt-chip" onclick="askPrompt(this)">When should I start destocking in a drought?</div>
+            <div class="prompt-chip" onclick="askPrompt(this)">How do I calculate how many camps I need?</div>
+            <div class="prompt-chip" onclick="askPrompt(this)">What's the protein supplement protocol?</div>
+            <div class="prompt-chip" onclick="askPrompt(this)">How do I select which cows to keep?</div>
+            <div class="prompt-chip" onclick="askPrompt(this)">What water infrastructure do I need first?</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== MODAL ===================== -->
+<div class="modal-overlay" id="sop-modal" onclick="closeModalOutside(event)">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal()">×</button>
+    <div id="modal-content"><div style="text-align:center;padding:60px;color:#888;">Loading…</div></div>
+  </div>
+</div>
+
+<!-- ===================== FOOTER ===================== -->
+<footer style="background:#0c0c0c;border-top:1px solid var(--border);padding:64px 0 40px;">
+  <div class="container">
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:48px;margin-bottom:48px;" class="footer-grid">
+      <div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+          <div style="width:24px;height:24px;border:2px solid #555;border-radius:3px;display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-weight:700;font-size:11px;color:#666;flex-shrink:0;">LC</div>
+          <span style="font-family:'Playfair Display',serif;font-size:14px;font-weight:600;color:#666;letter-spacing:0.04em;">Land &amp; Carbon</span>
+        </div>
+        <p style="font-size:13px;color:#666;line-height:1.8;max-width:280px;">Regenerative ranch management for a lasting future. Improving land, building adaptive herds, and creating lasting value across the American West.</p>
+        <div style="display:flex;gap:12px;margin-top:20px;">
+          <a href="https://linkedin.com" target="_blank" style="color:#666;font-size:13px;transition:color 0.2s;" onmouseover="this.style.color='#96a882'" onmouseout="this.style.color='#666'">LinkedIn</a>
+          <span style="color:#333;">·</span>
+          <a href="https://x.com" target="_blank" style="color:#666;font-size:13px;transition:color 0.2s;" onmouseover="this.style.color='#96a882'" onmouseout="this.style.color='#666'">X / Twitter</a>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#555;margin-bottom:16px;">Contact</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <a href="/cdn-cgi/l/email-protection#99f0f7e8ecf0ebe0d9f5f8f7fdf8f7fdfaf8ebfbf6f7b7faf6f4" style="font-size:13px;color:#888;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='var(--sage-light)'" onmouseout="this.style.color='#888'"><span class="__cf_email__" data-cfemail="167f7867637f646f567a7778727778727577647479783875797b">[email&#160;protected]</span></a>
+          <a href="/cdn-cgi/l/email-protection#9cfffdeef9f9eeefdcf0fdf2f8fdf2f8fffdeefef3f2b2fff3f1" style="font-size:13px;color:#888;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='var(--sage-light)'" onmouseout="this.style.color='#888'"><span class="__cf_email__" data-cfemail="5e3d3f2c3b3b2c2d1e323f303a3f303a3d3f2c3c3130703d3133">[email&#160;protected]</span></a>
+          <a href="/cdn-cgi/l/email-protection#a3d3d1c6d0d0e3cfc2cdc7c2cdc7c0c2d1c1cccd8dc0ccce" style="font-size:13px;color:#888;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='var(--sage-light)'" onmouseout="this.style.color='#888'"><span class="__cf_email__" data-cfemail="e39391869090a38f828d87828d87808291818c8dcd808c8e">[email&#160;protected]</span></a>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#555;margin-bottom:16px;">Office</div>
+        <div style="font-size:13px;color:#888;line-height:1.8;">290 East Broadway<br/>Jackson, Wyoming 83001<br/>United States</div>
+      </div>
+    </div>
+    <div style="border-top:1px solid #1e1e1e;padding-top:28px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+      <div style="font-size:12px;color:#444;">© 2026 Land and Carbon, Inc. — Trademark, Copyright and all other Rights Reserved</div>
+      <div style="font-size:12px;color:#444;">Ranch SOP Dashboard v1.0 | April 2026</div>
+    </div>
+  </div>
+</footer>
+
+<style>
+@media(max-width:768px){
+  .advisor-grid{grid-template-columns:1fr!important;}
+  .footer-grid{grid-template-columns:1fr!important;}
+}
+</style>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+// ============================================================
+// SOP KNOWLEDGE BASE
+// ============================================================
+const SOP_DATA = {
+  sop01: {
+    title: "UHDG: Principles & Setup",
+    content: `<h2>Purpose</h2><p>This SOP defines what Ultra-High Density Grazing (UHDG) is, why it works, what outcomes it produces, and how to set up a functioning UHDG system from scratch. It is the foundational document in the Grazing Management series.</p>
+<h2>Key Definitions</h2>
+<p><strong>Ultra-High Density Grazing (UHDG):</strong> A single mob of livestock concentrated at very high density on a small area for a very short time, then moved — allowing the grazed area extended rest and recovery.</p>
+<p><strong>Herd Effect:</strong> Physical and biological impact of a concentrated mob — hoof action, dung/urine deposition, trampling. In UHDG, this is a management tool, not an unintended consequence.</p>
+<p><strong>Non-Selective Grazing:</strong> When animal density is high enough that cattle graze all available forage regardless of palatability. This drives species composition toward more palatable grasses over time.</p>
+<p><strong>Rest Period:</strong> Time a grazed camp is left ungrazed for full recovery. This is the PRIMARY variable managed by the operator.</p>
+<p><strong>Camp:</strong> A single paddock or subdivision within the UHDG rotation — typically very small relative to conventional paddocks.</p>
+<h2>Part 1 — Core Principles</h2>
+<p>UHDG reverses conventional rangeland logic. Conventional management tries to protect land from animal impact. UHDG recognises that in grassland ecosystems, the land <em>requires</em> animal impact to function at its potential. Low-density continuous grazing degrades land as surely as overgrazing does.</p>
+<p>Johann Zietsman found that his degraded Zimbabwean veld responded positively when he increased density dramatically and moved animals rapidly. Within one year, palatable grass species increased from 4.5% to 26% of total cover.</p>
+<h3>The Four Processes UHDG Manages</h3>
+<ul>
+<li><strong>Water Cycle</strong> — UHDG improves infiltration via hoof action, litter, and soil biology. More water enters the soil; less runs off.</li>
+<li><strong>Mineral Cycle</strong> — Dung and urine distributed evenly across the whole land area with every move, instead of concentrating near water and shade.</li>
+<li><strong>Energy Flow</strong> — Dead rank material is consumed or trampled at the right growth stage, maximising active photosynthetic area.</li>
+<li><strong>Community Dynamics</strong> — Non-selective grazing removes competitive advantage from unpalatable species; palatable, productive species dominate over successive rotations.</li>
+</ul>
+<h2>Part 2 — Expected Outcomes</h2>
+<table><tr><th>Outcome</th><th>Typical Timeframe</th></tr>
+<tr><td>Palatable grass species increase</td><td>Year 1–3</td></tr>
+<tr><td>Carrying capacity increase</td><td>Year 2–5</td></tr>
+<tr><td>Improved rainfall infiltration</td><td>Year 1–2</td></tr>
+<tr><td>Reduced bare ground</td><td>Year 1–2</td></tr>
+<tr><td>Improved litter cover</td><td>Year 1</td></tr></table>
+<h2>Part 5 — Starting Densities</h2>
+<table><tr><th>Environment</th><th>Starting Density</th><th>Notes</th></tr>
+<tr><td>Tropical/Sub-tropical</td><td>200–500 animals/ha</td><td>Higher densities achievable as system matures</td></tr>
+<tr><td>Semi-arid</td><td>100–300 animals/ha</td><td>Start conservative; monitor rumen fill closely</td></tr>
+<tr><td>Arid</td><td>50–200 animals/ha</td><td>Rancho Carretas model: 1,000–2,000/ha with 6–8 moves/day</td></tr></table>
+<h2>Part 6 — Electric Fencing Requirements</h2>
+<ul>
+<li>Energiser: size generously — oversize rather than undersize. Voltage at furthest point must exceed <strong>3,000 V</strong> at all times</li>
+<li>Test voltage at the far end of the circuit <strong>every day</strong></li>
+<li>Single-strand polywire or high-tensile wire is standard for internal camp division</li>
+<li>Permanent perimeter must be electrified and integrated into the energiser circuit</li>
+<li>Temporary post supply: calculate for planned camp layout plus 20% contingency</li>
+</ul>
+<h2>Part 7 — Daily Monitoring</h2>
+<p><strong>Rumen fill check (3× daily — morning, midday, late afternoon):</strong></p>
+<ul>
+<li>Full rumen: deep, turgid "C" shape visible in the left paralumbar fossa — animal is adequately fed</li>
+<li>Partially full (flat or slightly concave): monitor; may need larger camp or faster move</li>
+<li>Empty (sunken paralumbar fossa): act immediately — move animals or increase camp size</li>
+</ul>
+<p><strong>Behaviour signals:</strong> A well-fed mob under UHDG is calm and grazes purposefully. Restlessness, excessive vocalisation, or fence-testing indicates a problem — investigate immediately.</p>
+<h2>Part 8 — Common Mistakes</h2>
+<table><tr><th>Mistake</th><th>Consequence</th><th>Prevention</th></tr>
+<tr><td>Insufficient water infrastructure</td><td>Animals concentrate at water; UHDG cannot function</td><td>Fix water before starting</td></tr>
+<tr><td>Under-powered energiser</td><td>Animals break through wire; mob breaks up</td><td>Oversize the energiser; test voltage daily</td></tr>
+<tr><td>Re-grazing before full recovery</td><td>Progressive weakening of sward</td><td>Never cut rest short for management convenience</td></tr>
+<tr><td>Moving too slowly (long occupation times)</td><td>Selective grazing resumes</td><td>Shorter occupation times produce better land response</td></tr>
+<tr><td>Treating UHDG as a fixed rotation</td><td>Calendar-driven management ignores conditions</td><td>Build adaptive capacity from day one</td></tr></table>
+<h2>Setup Checklist</h2>
+<ul>
+<li>☐ Water infrastructure capable of supplying all camps</li>
+<li>☐ Mobile water trough and pipeline/hose system in place</li>
+<li>☐ Herd consolidated into a single mob</li>
+<li>☐ Baseline photographs taken at fixed monitoring points</li>
+<li>☐ Energiser installed and tested — voltage &gt;3,000V at furthest point</li>
+<li>☐ Target density determined for starting season</li>
+<li>☐ Starting camp size calculated</li>
+<li>☐ Number of camps for target rest period calculated</li>
+<li>☐ Daily rumen fill monitoring protocol in place</li>
+</ul>`
+  },
+  sop02: {
+    title: "Grazing Planning & Rotation Design",
+    content: `<h2>Purpose</h2><p>This SOP provides the practical framework for designing a grazing rotation, determining rest periods, building a grazing plan, and managing adaptively in response to real conditions. The central skill of UHDG is reading the land and animals and making the right decision on when to move and when to wait.</p>
+<h2>Part 1 — Rest Period is Everything</h2>
+<p>Experienced UHDG operators focus first on the rest period. Johann Zietsman's finding: "The required equivalent daily intake of grass by an animal is four times greater on veld with a long recovery period as opposed to the same veld with a very short recovery period."</p>
+<p><strong>Rule: when in doubt, increase the rest period.</strong> A longer rest period never harms a well-designed system. A rest period that is too short progressively degrades it.</p>
+<h3>Rest Period Starting Targets by Environment</h3>
+<table><tr><th>Environment</th><th>Wet season rest</th><th>Dry season rest</th></tr>
+<tr><td>Tropical high-rainfall (&gt;800mm)</td><td>30–45 days</td><td>90–150 days</td></tr>
+<tr><td>Sub-tropical / mixed (600–800mm)</td><td>45–75 days</td><td>120–180 days</td></tr>
+<tr><td>Semi-arid (400–600mm)</td><td>60–90 days</td><td>150–270 days</td></tr>
+<tr><td>Arid (&lt;400mm)</td><td>90–180 days</td><td>270–540 days</td></tr>
+<tr><td>Degraded starting condition</td><td colspan="2">Add 30–50% to all figures above</td></tr></table>
+<h2>Part 2 — The Core Calculation</h2>
+<blockquote>Number of camps = Rest period (days) ÷ Occupation time per camp (days)<br/>Camp size (ha) = Herd size ÷ Target density (animals/ha)</blockquote>
+<p><strong>Example — Tropical wet season:</strong> Rest 45 days ÷ 1 day occupation = 45 camps required.</p>
+<p><strong>Example — Semi-arid dry season:</strong> Rest 120 days ÷ 1 day occupation = 120 camps required.</p>
+<h2>Part 3 — Overstocked vs Overgrazed</h2>
+<p>These are different problems with different solutions:</p>
+<ul>
+<li><strong>Overstocked:</strong> Too many animals for the annual carrying capacity. Solution: reduce numbers (sell, destock, or custom-graze).</li>
+<li><strong>Overgrazed:</strong> Rest periods insufficient — plants re-grazed before recovery. Can happen even at conservative stocking rates if rotation is too fast. Solution: increase rest periods.</li>
+</ul>
+<h2>Part 5 — Forage Budgeting</h2>
+<p>Monitor total available dry matter across all camps at the start of each month. Compare against: (a) estimated daily consumption, and (b) number of days until next expected rain or growing season break. If reserves will not reach the next growth event: begin destocking assessment immediately.</p>
+<h2>Part 8 — Rotation Strategy Selection</h2>
+<table><tr><th>Forage quality trajectory</th><th>Strategy</th></tr>
+<tr><td>Quality holds through dormancy (sweetveld, mixed)</td><td>Long-Rest Continuous Rotation (LRCR)</td></tr>
+<tr><td>Quality declines rapidly after peak growth (sourveld, warm-season dominant)</td><td>Three-Zone Adaptive Grazing (TZAG)</td></tr>
+<tr><td>Mixed or unknown</td><td>Default LRCR; transition to TZAG if quality cliff becomes evident</td></tr></table>
+<h2>Decision Triggers for Plan Adjustment</h2>
+<table><tr><th>Observation</th><th>Immediate action</th></tr>
+<tr><td>Rumen fill below 85% at start of day</td><td>Increase camp size or move to better camp immediately</td></tr>
+<tr><td>BCS declining 2+ months consecutively</td><td>Forage budget review; consider destocking</td></tr>
+<tr><td>Grass not recovered at planned rest period end</td><td>Extend rest; do not rush re-entry</td></tr>
+<tr><td>Abundant grass not being grazed evenly</td><td>Increase density; shorten occupation time</td></tr>
+<tr><td>Wet season grass growing faster than rotation</td><td>Designate additional stockpile; skip camps</td></tr>
+<tr><td>Dry season extending beyond plan</td><td>Activate stockpile; begin destocking assessment</td></tr></table>`
+  },
+  sop03: {
+    title: "Seasonal Grazing Management",
+    content: `<h2>Purpose</h2><p>This SOP describes how to manage a UHDG system through the full seasonal cycle. This is not a schedule — it is a framework for reading where you are in the seasonal cycle and responding with the right management at the right time.</p>
+<h2>The Four Annual Phases</h2>
+<table><tr><th>Phase</th><th>Description</th><th>Key Management Action</th></tr>
+<tr><td>1. Pre-season preparation</td><td>End of dormancy; anticipating growth onset</td><td>Assess stockpile reserves; reassign zones; confirm water and supplements positioned</td></tr>
+<tr><td>2. Growing season</td><td>Active plant growth; peak forage quality</td><td>Manage rest periods dynamically; bank wet-season surplus; stay on quality (Zone 1 for TZAG)</td></tr>
+<tr><td>3. Seasonal transition</td><td>Growth rate slowing; quality declining</td><td>Extend rest periods; begin moving toward dry-season rotation; exit Zone 1 when loop breaks</td></tr>
+<tr><td>4. Non-growing season</td><td>Plant dormancy; forage quality low</td><td>Graze stockpile with extended rest; supplement protein; monitor reserves against days remaining</td></tr></table>
+<h2>Growing Season Management</h2>
+<ul>
+<li>In the growing season, grass growth rate may exceed the rotation speed — designate additional camps as stockpile rather than forcing animals through too fast</li>
+<li>Body condition should be improving through the growing season. If animals are not gaining condition during active growth, the system has a problem — diagnose before the season ends</li>
+<li>Calving window: calves born at the start of the growing season have the best survival and growth rates. Set breeding season to produce this outcome</li>
+</ul>
+<h2>Seasonal Transition — Highest Risk Period</h2>
+<p>The seasonal transition is the most common point of management failure. The signs of transition can be subtle and operators often wait too long to respond.</p>
+<p><strong>Transition signals to watch for:</strong></p>
+<ul>
+<li>Grass plants showing brown tips or losing green color in more than 30% of the canopy</li>
+<li>Rumen fill beginning to decline despite adequate access to standing material</li>
+<li>Animal preference shifting — mob seeks certain areas and ignores others</li>
+<li>Daily gain slowing or stopping</li>
+</ul>
+<p><strong>At first sign of transition:</strong> Activate Zone 2 if on TZAG. Begin extending rest periods if on LRCR. Ensure protein supplement is positioned and ready before animals need it.</p>
+<h2>Non-Growing Season Management</h2>
+<ul>
+<li>Protein supplementation is required when forage crude protein falls below approximately 7%. In most non-growing season forages, this threshold is crossed within 4–8 weeks of dormancy onset</li>
+<li>Supplement options (in order of preference): bypass protein meals, cottonseed meal, urea-based lick blocks (with extreme caution — see SOP 06)</li>
+<li>Monitor Zone 3 dry matter reserves: estimate remaining feed against days to growing season. If reserves will fall short — destock or begin supplementary feeding before condition loss begins</li>
+</ul>
+<h2>Calving Window Alignment</h2>
+<p>Setting the breeding season to produce calving at the start of the growing season is one of the highest-leverage decisions available to the operator. It means:</p>
+<ul>
+<li>Cows calve in improving nutritional conditions — colostrum quality is highest</li>
+<li>Calves grow on high-quality milk produced on peak-quality forage</li>
+<li>Cows re-breed while still in positive nutritional plane — shortest inter-calving period</li>
+<li>Weaning occurs before or during the non-growing season, reducing mob nutritional demand at the most difficult time</li>
+</ul>`
+  },
+  sop04: {
+    title: "Drought Management & Resilience",
+    content: `<h2>Purpose</h2><p>This SOP provides a decision framework for recognising drought early, responding in the correct sequence, and managing through and recovering from drought. Core principle: <strong>the decisions made before drought arrives determine the outcomes during it.</strong></p>
+<h2>Key Definitions</h2>
+<p><strong>Management Drought vs Climatic Drought:</strong> A climatic drought is a weather event. A management drought is what a poorly prepared operation experiences during one. Not all climatic droughts become management droughts.</p>
+<p><strong>Body Condition Floor:</strong> The minimum acceptable BCS at which the operator commits to action — regardless of market conditions. Set this BEFORE drought begins.</p>
+<h2>The UHDG Advantage in Drought</h2>
+<ul>
+<li><strong>More feed in the system</strong> — progressive carrying capacity increase through land improvement means more grass per hectare entering a dry period</li>
+<li><strong>Better water infiltration</strong> — UHDG land absorbs more rainfall per mm received. Every millimetre counts in drought</li>
+<li><strong>Better-conditioned animals</strong> — adapted genetics carry higher inherent body condition into a dry period</li>
+</ul>
+<h2>Early Warning Indicators</h2>
+<table><tr><th>Indicator</th><th>Action threshold</th></tr>
+<tr><td>Rainfall deficit: 2+ consecutive months below long-term average</td><td>Begin monitoring stockpile more frequently; monthly forage budget</td></tr>
+<tr><td>Grass growth rate visibly below seasonal norm</td><td>Weekly forage budget; assess destocking timeline</td></tr>
+<tr><td>Animals failing to hold condition despite adequate access</td><td>Forage quality assessment; protein supplement review</td></tr>
+<tr><td>BCS declining for 6+ weeks consecutively</td><td>Initiate destocking — do not wait</td></tr></table>
+<h2>Drought Response Sequence</h2>
+<ol>
+<li><strong>Extend rest periods</strong> — slow consumption of available feed and protect recovering plants. First response, always.</li>
+<li><strong>Activate stockpile / Zone 3 early</strong> — do not wait until you are forced. Early entry preserves options.</li>
+<li><strong>Increase protein supplementation</strong> — as forage quality declines, protein supplementation becomes critical for rumen function and maintaining condition.</li>
+<li><strong>Destock — early, decisively</strong> — sell low-value animals before BCS hits the floor. Never wait for market improvement. The land damage from waiting costs more than a poor sale price.</li>
+<li><strong>Set a hard BCS floor</strong> — when the breeding herd approaches the floor, destock further or emergency-feed regardless of any other consideration.</li>
+</ol>
+<h2>Destocking Order — Who to Sell First</h2>
+<ol>
+<li>Old cows and bulls at or past their productive prime</li>
+<li>Cows that failed to conceive in the last cycle</li>
+<li>Late-calving cows (first calvers after the cutoff date)</li>
+<li>Underweight, slow-growing steers not on target for sale weight</li>
+<li>Any animal with chronic health issues</li>
+</ol>
+<p><strong>Retain at all costs:</strong> Your best-adapted, fertile breeding cows and proven sires. These represent years of genetic selection and cannot be rebuilt quickly after drought.</p>
+<h2>Post-Drought Recovery</h2>
+<ul>
+<li><strong>Do not rush restocking.</strong> After adequate rains return, rest the land for a minimum of one full growing season before restocking to target levels</li>
+<li>Start with conservative numbers — increase stocking rate as land condition measurably improves</li>
+<li>Monitor recovery: photograph the same monitoring points; assess species composition; check rumen fill</li>
+<li>Post-drought soil biology recovers faster than visible grass cover — trust the system and don't overstock on the first flush</li>
+</ul>
+<h2>The Bud Williams Principle</h2>
+<blockquote>"You cannot go broke with too much money or too much grass, but it is easy to go broke with too many cattle at the wrong time."</blockquote>
+<p>Having too few cattle costs one season's production. Having too many at the wrong time costs the land, the herd, and potentially the business — and land damage persists for years.</p>`
+  },
+  sop05: {
+    title: "Animal Genetics & Breed Selection",
+    content: `<h2>Purpose</h2><p>This SOP provides a practical framework for genetics and breed selection in UHDG and regenerative ranching systems. Adapted genetics are foundational — the grazing system can only deliver its outcomes if the cattle are capable of thriving within it.</p>
+<h2>The Foundational Equation</h2>
+<blockquote>Phenotype = Genotype × Environment + Hormones</blockquote>
+<p>An animal in poor condition on poor ground is not necessarily a poor genetic animal. An animal in excellent condition on high inputs may be a very poor genetic animal. Always read performance in context.</p>
+<h2>The Three Foundational Traits</h2>
+<ol>
+<li><strong>Inherent body condition (fatness gene)</strong> — the genetic ability to deposit and mobilise fat reserves on available forage. Primary drought resilience trait. Primary fertility sustainer. Most damaged by decades of performance selection for lean growth.</li>
+<li><strong>Hormonal balance</strong> — expressed as sexual dimorphism. Bulls clearly masculine (heavy neck, prominent sheath, large scrotal development). Cows clearly feminine (clean head and neck, broad pelvis, strong maternal expression). Drives reproductive cyclicity.</li>
+<li><strong>Calving ease (functional conformation)</strong> — sloping rump, moderate frame, non-excessive birth weight. Any cow requiring calving assistance is removed from the programme, regardless of other performance. Non-negotiable.</li>
+</ol>
+<h2>The Simplest Selection Criteria</h2>
+<ul>
+<li><strong>2+3 dam:</strong> The dam's mother first calved at 2 years, then again at 3 years — unassisted, on available forage. This is the fertility foundation.</li>
+<li><strong>Top 10% for yearling maturity</strong> within the contemporary group — relative to peers in same environment and season, not against an absolute standard.</li>
+<li><strong>Top 10% for scrotal circumference per 100 kg mature size (bulls)</strong> — assessed at yearling age. Subordinate to actual breeding performance but useful as an early filter.</li>
+</ul>
+<h2>Culling Criteria — Non-Negotiable Removals</h2>
+<ul>
+<li>Any cow that requires assistance to calve</li>
+<li>Any cow that fails to produce a calf in a 12-month period (barren)</li>
+<li>Any cow calving after the designated cutoff date for the breeding season</li>
+<li>Any animal with chronic lameness, recurring health issues, or requiring regular veterinary intervention</li>
+<li>Any bull whose calves cause consistent dystocia</li>
+</ul>
+<h2>Visual Appraisal Priorities</h2>
+<p>In order of importance when assessing an individual animal:</p>
+<ol>
+<li>Reproductive status and calving record</li>
+<li>Udder quality and teat placement (cows)</li>
+<li>Structural soundness — feet, legs, joint angles</li>
+<li>Temperament — calm and tractable under low-stress handling</li>
+<li>Frame size relative to the carrying capacity of the environment</li>
+<li>Coat condition (indicator of adaptation and parasite resistance)</li>
+</ol>
+<h2>Breed Overview for UHDG Systems</h2>
+<table><tr><th>Breed/Type</th><th>Strengths</th><th>Considerations</th></tr>
+<tr><td>Boran (East African Zebu)</td><td>Exceptional fat-depositing genome, high fertility, heat and tick tolerance</td><td>Not widely available in all markets</td></tr>
+<tr><td>Adapted Brahman composites</td><td>Heat tolerance, foraging ability, moderate frame</td><td>Avoid performance-selected bloodlines</td></tr>
+<tr><td>Africaner / Sanga types</td><td>Extreme adaptation, high inherent condition, good fertility</td><td>Lower growth rates; not suited to conventional markets</td></tr>
+<tr><td>British breed composites (naturally selected)</td><td>Good maternal traits, adaptable to temperate systems</td><td>Select only from non-performance selected lines</td></tr>
+<tr><td>High-performance Angus, Hereford (feedlot selected)</td><td>High growth rate on inputs</td><td>Poor adaptation to UHDG; high input requirements; avoid</td></tr></table>
+<h2>Heifer Development</h2>
+<ul>
+<li>Heifers should first calve at 2 years of age — this is a selection criterion, not just a goal</li>
+<li>Heifers that fail to conceive in their first breeding season should be culled, not given a second chance</li>
+<li>Do not supplement heifers through their first breeding season if it masks their true genetic fertility</li>
+<li>Yearling weight relative to contemporaries is the key development metric — not absolute weight</li>
+</ul>`
+  },
+  sop06: {
+    title: "Livestock Nutrition",
+    content: `<h2>Purpose</h2><p>This SOP provides the practical framework for livestock nutrition in UHDG systems. Foundational principle: the grass system is the primary nutritional tool. Every other input is secondary. The best nutrition programme is one where supplementation is minimal, precisely timed, and targeted.</p>
+<h2>The Nutritional Hierarchy</h2>
+<ol>
+<li><strong>Grazing management</strong> — rest periods, rotation design, seasonal strategy. This determines forage quality and quantity above all else.</li>
+<li><strong>Genetics</strong> — adapted cattle extract more value from available forage. The genetics programme is a long-term nutrition investment.</li>
+<li><strong>Protein supplementation</strong> — the first and most important supplement; bridges dormant-season forage protein gaps.</li>
+<li><strong>Mineral supplementation</strong> — targeted to confirmed regional deficiencies only.</li>
+<li><strong>Emergency / priority-class feeding</strong> — hay, silage, or byproducts for specific animals at specific times when the system cannot meet needs.</li>
+</ol>
+<h2>Supplementation Decision Rule</h2>
+<p>Before implementing any supplementation, answer these two questions:</p>
+<ol>
+<li>What specific nutrient is deficient?</li>
+<li>Is the deficiency real, or is it a management problem? (Poor BCS from insufficient rest or forage access is a management problem — fix the rotation first.)</li>
+</ol>
+<h2>The Three Field Monitoring Tools</h2>
+<ol>
+<li><strong>Rumen fill</strong> — assessed 3× daily (morning, midday, late afternoon). Full rumen = adequately fed. See SOP 01 for assessment protocol.</li>
+<li><strong>Body condition score (BCS)</strong> — scored daily when moving cattle daily; monthly minimum otherwise. The trend matters more than the absolute score. Declining BCS over 2+ months requires intervention.</li>
+<li><strong>Fecal consistency</strong> — healthy cattle on quality forage produce firm, well-formed pats. Very loose feces indicates high-quality, high-moisture forage (acceptable if animals are gaining). Dry, fibrous feces indicates poor forage quality or insufficient intake.</li>
+</ol>
+<h2>Protein Supplementation Protocol</h2>
+<p>Begin protein supplementation when:</p>
+<ul>
+<li>Forage enters dormancy and crude protein is estimated below 7–8%</li>
+<li>Cattle show declining rumen fill despite adequate access to standing dry matter</li>
+<li>Feces become dry and fibrous with undigested fibre visible</li>
+</ul>
+<p><strong>Supplement types (preferred order):</strong></p>
+<ul>
+<li>Bypass protein meals (cottonseed meal, sunflower cake) — most effective, no toxicity risk</li>
+<li>Non-protein nitrogen sources (urea blocks, liquid urea) — effective but significant toxicity risk if mismanaged</li>
+</ul>
+<h2>⚠️ UREA SAFETY — CRITICAL</h2>
+<p style="color:#e05252;font-weight:600;background:#2a1a1a;padding:12px;border-left:3px solid #e05252;border-radius:4px;">UREA IS FATAL AT DOSES ABOVE APPROXIMATELY 1g PER kg BODY WEIGHT. This is a life-threatening hazard requiring strict protocol.</p>
+<ul>
+<li>Never feed urea to hungry animals — hungry animals overconsume and die</li>
+<li>Introduce urea gradually over 2–3 weeks — allow rumen microbes to adapt</li>
+<li>Always dilute urea in a carrier (grain, molasses) — never offer straight urea</li>
+<li>Maximum inclusion rate: typically 1% of dry matter intake — never exceed label rates</li>
+<li>Do not use urea in heat stress conditions — toxicity risk increases</li>
+<li>Store securely — ensure no uncontrolled access</li>
+<li>Signs of urea toxicity: bloat, muscle tremors, excessive salivation, rapid onset of distress — call a vet immediately</li>
+</ul>
+<h2>Mineral Supplementation</h2>
+<p>Do not supplement minerals without confirmed deficiency. Over-supplementation of some minerals causes toxicity. Have soils and/or tissue tested before implementing a mineral programme. Common regional deficiencies to investigate:</p>
+<ul>
+<li>Phosphorus — most common in tropical/subtropical regions during dry season</li>
+<li>Selenium — deficiency common in parts of USA, Australia, New Zealand</li>
+<li>Copper — may be deficient or may be antagonised by high iron or molybdenum in water/forage</li>
+<li>Zinc — often low in degraded or sandy soils</li>
+</ul>
+<h2>Priority Class Nutrition</h2>
+<p>Some animals have higher nutritional requirements and may need targeted support within the system:</p>
+<ul>
+<li><strong>First-calf heifers</strong> — still growing while producing their first calf. Monitor closely through their first lactation.</li>
+<li><strong>Late-pregnancy cows</strong> — nutritional requirements increase significantly in the final 60 days before calving.</li>
+<li><strong>Weaners</strong> — immediately post-weaning, weaners are vulnerable. Ensure high-quality forage access and consider short-term supplementation if transition is during the non-growing season.</li>
+</ul>`
+  },
+  infra: {
+    title: "Infrastructure Development Standard — Land and Carbon",
+    content: `<h2>Purpose</h2><p>This document provides Land and Carbon's infrastructure development standard for acquired ranches transitioning from conventional management to UHDG. Scope: American ranch acquisitions, 10,000–50,000 acres. Transition horizon: 20 years to full UHDG operation.</p>
+<h2>Core Principle</h2>
+<p><strong>Genetics drive the timeline, not infrastructure.</strong> The genetic shift from conventional high-input cattle to adapted fertile composites takes 8–12 years of consistent selection pressure at minimum. Infrastructure can be upgraded on a faster schedule — virtual fencing is compressing that schedule further.</p>
+<p>Make infrastructure decisions in service of the genetics programme. The question at each phase: "What infrastructure does this phase of the genetics transition require?" — not "What infrastructure does UHDG require?"</p>
+<h2>Infrastructure Urgency Tiers</h2>
+<table><tr><th>Tier</th><th>Timing</th><th>Requirements</th></tr>
+<tr><td><strong>Tier 1</strong></td><td>Non-negotiable before cattle are placed</td><td>Water security; perimeter fence integrity</td></tr>
+<tr><td><strong>Tier 2</strong></td><td>Required within Year 1</td><td>Basic processing (weigh scale, AI chute); genetics programme running</td></tr>
+<tr><td><strong>Tier 3</strong></td><td>Developed across 20-year transition</td><td>Internal fencing (physical or virtual), expanded water distribution, advanced processing, full UHDG camp system</td></tr></table>
+<h2>Pre-Acquisition Checklist</h2>
+<p><strong>Water:</strong></p>
+<ul>
+<li>☐ Number and condition of existing water sources (bores, wells, springs, tanks, ponds, streams)</li>
+<li>☐ Current pump types and condition</li>
+<li>☐ Water rights held — what is permitted, seasonal, senior/junior</li>
+<li>☐ Riparian area condition and regulatory restrictions on livestock access</li>
+<li>☐ Pipeline infrastructure: material, condition, coverage</li>
+<li>☐ Existing trough inventory and distribution</li>
+<li>☐ Water quality: salinity, mineral load, seasonal variation</li>
+<li>☐ Worst-case dry season water security — what fails first if the pump fails?</li>
+</ul>
+<p><strong>Fencing:</strong></p>
+<ul>
+<li>☐ Perimeter fence condition: can it contain cattle without immediate repair?</li>
+<li>☐ Existing internal fence layout: paddock count, size, lane locations</li>
+<li>☐ Fence type: barbed wire, high-tensile, electric, combination</li>
+<li>☐ Terrain constraints on fencing</li>
+<li>☐ Cell coverage across the property (for virtual fencing viability)</li>
+</ul>
+<p><strong>Processing:</strong></p>
+<ul>
+<li>☐ Existing corral and working facility: location, layout, condition</li>
+<li>☐ Chute type and condition</li>
+<li>☐ Weigh scale: present or absent, type, condition</li>
+<li>☐ AI capability: chute suitable, semen storage available?</li>
+<li>☐ Proximity to veterinary services</li>
+</ul>
+<h2>Water Infrastructure Standard</h2>
+<p>UHDG requires water access in every camp. The gold standard is pipeline and trough distribution that can be moved with the mob. Minimum standard for viable UHDG operation:</p>
+<ul>
+<li>Mobile water trough capable of supplying the mob's daily water requirement (approximately 50–80 litres/head/day in hot conditions)</li>
+<li>Flexible hose or quick-connect pipeline long enough to reach the furthest camp from the nearest permanent water point</li>
+<li>Pump pressure adequate to fill the trough at a rate the mob can drink without waiting</li>
+</ul>
+<h2>Virtual Fencing Assessment</h2>
+<p>Virtual fencing (Vence, Halter, and equivalent systems) is materially compressing the infrastructure timeline for UHDG transitions. Where cell coverage is adequate, virtual fencing enables UHDG-density camp management without the capital cost of physical internal fencing.</p>
+<p>Virtual fencing assessment criteria for pre-acquisition:</p>
+<ul>
+<li>Cell coverage: 4G/LTE coverage across &gt;80% of the property — confirm with network maps and on-ground testing</li>
+<li>Topographic limitations: deep canyons and dense vegetation may create coverage gaps</li>
+<li>Cost-benefit: virtual fencing vs physical high-tensile single-strand at UHDG camp scale</li>
+<li>Animal training: typically 2–4 weeks to train a mob; factor into transition timeline</li>
+</ul>
+<h2>20-Year Transition Phases</h2>
+<table><tr><th>Phase</th><th>Years</th><th>Infrastructure focus</th><th>Genetics focus</th></tr>
+<tr><td>Phase 1</td><td>0–3</td><td>Tier 1 complete; processing operational; mobile water in place</td><td>Baseline herd assessment; culling programme initiated; AI commenced</td></tr>
+<tr><td>Phase 2</td><td>3–8</td><td>Internal fencing (physical or virtual) enabling 20–50 camp rotation; water distribution expanded</td><td>First generation of selected progeny entering the herd; accelerating culling of non-adapted animals</td></tr>
+<tr><td>Phase 3</td><td>8–15</td><td>Full UHDG camp system; advanced water distribution; processing facility upgraded</td><td>Second and third generation adapted composites dominant; genetic programme self-sustaining</td></tr>
+<tr><td>Phase 4</td><td>15–20</td><td>Infrastructure optimised and maintained; focus on efficiency and monitoring</td><td>Full adapted herd; selection for incremental genetic improvement within the adapted composite</td></tr></table>`
+  },
+  tzag: {
+    title: "Three-Zone Adaptive Grazing (TZAG) Framework",
+    content: `<h2>Purpose</h2><p>TZAG is a property-scale approach to structuring UHDG across environments where forage quality declines rapidly after the peak growing season. It applies primarily to: sourveld (southern and eastern Africa), warm-season dominant savannas (tropical/subtropical Africa, South America, eastern/southern USA), and monsoonal systems (northern Australia, parts of Central America).</p>
+<h2>The Core Insight</h2>
+<p>In a conventional rotation, animals graze lightly and selectively across the whole property, returning before full plant recovery. UHDG changes this — because animals graze thoroughly before moving, they take longer to complete a full rotation and rest periods are longer. In sourveld and warm-season dominant systems, an area grazed thoroughly in October may not be returned to until the following season's flush. TZAG makes this dynamic explicit and planned.</p>
+<h2>The Three Zones</h2>
+<table><tr><th>Zone</th><th>During growing season</th><th>During non-growing season</th></tr>
+<tr><td><strong>Zone 1</strong> — Intensive UHDG</td><td>Animals graze in continuous UHDG loop on best-quality flush. Full non-selective grazing at UHDG density.</td><td>Closed and resting for the full non-growing season</td></tr>
+<tr><td><strong>Zone 2</strong> — Buffer / Transition</td><td>Closed; accumulating forage as Zone 1 buffer and Zone 3 pre-fill</td><td>Used during seasonal transition — moderate grazing as animals move from Zone 1 to Zone 3</td></tr>
+<tr><td><strong>Zone 3</strong> — Full rest + Stockpile</td><td>Completely closed; accumulating maximum dry matter stockpile for the non-growing season</td><td>Primary feed source for the non-growing season; systematic grazing with protein supplement</td></tr></table>
+<h2>The Three-Year Rotation Cycle</h2>
+<table><tr><th>Year</th><th>Section A</th><th>Section B</th><th>Section C</th></tr>
+<tr><td>Year 1</td><td>Zone 1 — Intensive</td><td>Zone 2 — Buffer</td><td>Zone 3 — Full rest</td></tr>
+<tr><td>Year 2</td><td>Zone 3 — Full rest</td><td>Zone 1 — Intensive</td><td>Zone 2 — Buffer</td></tr>
+<tr><td>Year 3</td><td>Zone 2 — Buffer</td><td>Zone 3 — Full rest</td><td>Zone 1 — Intensive</td></tr></table>
+<p>Every section receives: one year of intensive species composition pressure and animal impact; one year of moderate treatment; and one year of complete biological recovery.</p>
+<h2>Zone Assignment Rules</h2>
+<p>Zone boundaries are <strong>dynamic</strong> — reassigned each year based on current forage conditions. At the start of each growing season:</p>
+<ul>
+<li><strong>Best species composition, highest palatable cover</strong> → Zone 1 candidates. These areas produce the highest-quality flush.</li>
+<li><strong>Good recovery from last season's Zone 1</strong> → Zone 2 or Zone 3 to consolidate improvement.</li>
+<li><strong>Poorest condition or most in need of rest</strong> → Zone 3 priority. Land that has been under-rested benefits most from a full season ungrazed.</li>
+</ul>
+<h2>Growing Season Management (Zone 1)</h2>
+<ul>
+<li>Animals run in a continuous UHDG loop within Zone 1 from growing season onset until the season forces departure</li>
+<li>Monitor rumen fill 3× daily — Zone 1 quality grazing should produce consistently full rumens</li>
+<li>Stay in Zone 1 as long as the loop is working. Only exit when the quality of green flush declines to the point that the mob's rumen fill can no longer be maintained</li>
+<li>Zone 1 deliberately does not observe full rest periods — this is a managed trade-off, not a contradiction. The annual zone rotation provides the recovery that Zone 1 borrows against</li>
+</ul>
+<h2>Implementation Checklist</h2>
+<p><strong>Setup:</strong></p>
+<ul>
+<li>☐ Property assessed and zone boundaries assigned for coming season</li>
+<li>☐ Zone boundaries marked on property map and grazing chart</li>
+<li>☐ Water confirmed available in Zone 1 before growing season</li>
+<li>☐ Protein supplement sourced and positioned before Zone 3 entry</li>
+</ul>
+<p><strong>Growing season:</strong></p>
+<ul>
+<li>☐ Animals in Zone 1; continuous loop maintained; BCS and rumen fill monitored daily</li>
+<li>☐ Zone 2 and Zone 3 closed; entry only when season forces departure from Zone 1</li>
+</ul>
+<p><strong>Non-growing season:</strong></p>
+<ul>
+<li>☐ Protein supplementation running from Zone 3 entry</li>
+<li>☐ Zone 3 dry matter reserves monitored against days remaining in non-growing season</li>
+<li>☐ If reserves will fall short: reduce stock or begin hay feeding</li>
+</ul>
+<p><strong>End of season:</strong></p>
+<ul>
+<li>☐ Reassess property; rotate zone assignments based on current forage condition and recovery</li>
+<li>☐ Update grazing chart and property map for coming season</li>
+</ul>
+<h2>Critical Rule</h2>
+<p style="background:var(--sage-dim);padding:12px;border-radius:4px;color:var(--sage-light);font-weight:600;">No section remains in Zone 1 for consecutive years. If Zone 1 land is kept in the intensive role more than one year without rotation into Zone 3, planned overgraze shifts from a temporary strategy to genuine degradation. The annual rotation is not optional.</p>`
+  }
+};
+
+// ============================================================
+// AI KNOWLEDGE BASE (for Ranch Advisor)
+// ============================================================
+const RANCH_KNOWLEDGE = `
+You are the Land and Carbon Ranch SOP Advisor — an expert in Ultra-High Density Grazing (UHDG) and regenerative ranch management. You have complete knowledge of these SOPs and frameworks:
+
+**SOP 01 — UHDG Principles & Setup:**
+- Concentrate animals at very high density on small camps, move frequently, allow extended rest before returning
+- Herd effect (hoof action, dung, trampling) is a management tool, not a problem
+- Non-selective grazing drives species composition toward palatable grasses
+- Rest period is the PRIMARY management variable
+- Check energiser voltage (must exceed 3,000V at far end of circuit) every day
+- Monitor rumen fill 3× daily — full, partial, or empty. Empty = move now
+- Calm, purposeful grazing = well-run system. Restlessness or fence-testing = investigate immediately
+- Four processes: water cycle, mineral cycle, energy flow, community dynamics
+- Common mistakes: insufficient water before starting, under-powered energiser, re-grazing too soon, treating as fixed rotation
+
+**SOP 02 — Grazing Planning & Rotation Design:**
+- Core formula: Number of camps = Rest period (days) ÷ Occupation time (days); Camp size = Herd size ÷ target density
+- Rest period targets: Tropical wet 30-45d, sub-tropical wet 45-75d, semi-arid wet 60-90d, arid wet 90-180d. Dry season 2-3× longer
+- Rumen fill below 85% at day-start → increase camp size or move immediately
+- Overstocked (too many animals for land capacity) vs overgrazed (rest periods too short) — different problems, different solutions
+- Long-Rest Continuous Rotation (LRCR) for high-quality forage; Three-Zone Adaptive Grazing (TZAG) for sourveld/warm-season dominant
+
+**SOP 03 — Seasonal Grazing Management:**
+- Four phases: pre-season preparation, growing season, seasonal transition, non-growing season
+- Seasonal transition = highest risk period for management failure
+- Align calving window with growing season onset — highest-leverage breeding decision
+- Lengthen rest periods in dormancy; shorten cautiously only during peak growth
+
+**SOP 04 — Drought Management:**
+- Set Body Condition Floor BEFORE drought arrives — act when animals reach it, regardless of market
+- Early destocking = management response; late forced destocking = financial crisis
+- Drought response sequence: extend rest periods → activate stockpile/Zone 3 → increase protein supplementation → destock early
+- Sell order: old/past-prime animals, barren cows, late-calving cows, slow-growing steers, chronically ill animals
+- Retain at all costs: best-adapted fertile cows and proven sires
+- After drought breaks: rest land for one full growing season before restocking
+
+**SOP 05 — Genetics & Breed Selection:**
+- Three foundational traits: inherent body condition (fatness gene), hormonal balance (sexual dimorphism), calving ease (sloping rump)
+- Select from 2+3 dams (dam's mother calved at 2, then 3, unassisted on available forage)
+- Cull any cow requiring calving assistance — non-negotiable
+- Cull any cow failing to conceive in her breeding season
+- Phenotype = Genotype × Environment + Hormones — always read performance in context
+- Avoid high-performance feedlot-selected breeds — they need to be fed to breed
+
+**SOP 06 — Livestock Nutrition:**
+- Grass is the primary feed budget. Only supplement to bridge specific, identified gaps
+- Monitor with three tools: rumen fill (3× daily), BCS (daily when moving cattle daily, monthly minimum otherwise), fecal consistency
+- Begin protein supplementation when forage crude protein falls below 7-8% (usually 4-8 weeks into dormancy)
+- UREA IS DANGEROUS: fatal above ~1g/kg body weight. Never feed hungry animals. Never exceed label rates. Signs of toxicity: bloat, tremors, excessive salivation — call vet immediately
+- Mineral supplementation only for confirmed regional deficiencies
+
+**Infrastructure Standard:**
+- Genetics drive the timeline, not infrastructure
+- Tier 1 (non-negotiable before placing cattle): water security, perimeter fence integrity
+- Tier 2 (Year 1): weigh scale, AI chute, genetics programme started
+- Virtual fencing (Vence/Halter) requires >80% 4G/LTE coverage — assess before acquisition
+- 20-year transition horizon for full UHDG operation
+
+**TZAG Framework:**
+- Three zones: Zone 1 (intensive UHDG during growing season), Zone 2 (buffer/transition), Zone 3 (full rest + stockpile)
+- Rotate zone assignments annually — no section stays in Zone 1 for consecutive years
+- Zone 3 is drought insurance — build it, never consume it early unless the alternative is forced destocking
+- Best species composition → Zone 1. Most in need of rest → Zone 3
+
+When answering:
+1. Give practical, direct, actionable answers
+2. Reference which SOP/section applies
+3. Flag any safety issues prominently
+4. Use numbered steps for procedures
+5. Keep it field-appropriate — these are ranch employees using this in the paddock
+`;
+
+// ============================================================
+// NAVIGATION & UI FUNCTIONS
+// ============================================================
+function scrollToSection(id) {
+  document.getElementById(id).scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+let mobileMenuOpen = false;
+function toggleMobileMenu() {
+  const menu = document.getElementById('mobile-menu');
+  mobileMenuOpen = !mobileMenuOpen;
+  menu.style.display = mobileMenuOpen ? 'flex' : 'none';
+}
+
+// ============================================================
+// CARD FILTERING
+// ============================================================
+function filterCards(cat, el) {
+  document.querySelectorAll('#cat-tabs .section-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('#sop-cards .card').forEach(card => {
+    const show = cat === 'all' || card.dataset.cat === cat;
+    card.style.display = show ? 'flex' : 'none';
+  });
+}
+
+// ============================================================
+// ACCORDION (SOP Library)
+// ============================================================
+function toggleAccordion(id) {
+  const body = document.getElementById(id);
+  const icon = document.getElementById('icon-' + id);
+  const isOpen = body.classList.contains('open');
+  
+  // Load content if not already loaded
+  const sopKey = id.replace('acc0', 'sop0').replace('acc-', '').replace('acc', 'sop');
+  const mappedKey = getSOPKey(id);
+  if (mappedKey && SOP_DATA[mappedKey]) {
+    const contentEl = document.getElementById('content-' + mappedKey);
+    if (contentEl && contentEl.innerHTML.includes('Loading')) {
+      contentEl.innerHTML = SOP_DATA[mappedKey].content;
+    }
+  }
+  
+  body.classList.toggle('open', !isOpen);
+  icon.classList.toggle('open', !isOpen);
+  icon.textContent = isOpen ? '+' : '×';
+}
+
+function getSOPKey(accId) {
+  const map = { 'acc01': 'sop01', 'acc02': 'sop02', 'acc03': 'sop03', 'acc04': 'sop04', 'acc05': 'sop05', 'acc06': 'sop06', 'acc-infra': 'infra', 'acc-tzag': 'tzag' };
+  return map[accId];
+}
+
+// ============================================================
+// SOP SEARCH
+// ============================================================
+function filterSOPs() {
+  const query = document.getElementById('sop-search').value.toLowerCase();
+  const items = document.querySelectorAll('#sop-list .sop-item');
+  items.forEach(item => {
+    const text = item.textContent.toLowerCase();
+    item.style.display = text.includes(query) ? 'block' : 'none';
+  });
+}
+
+// ============================================================
+// MODAL
+// ============================================================
+function openModal(key) {
+  const modal = document.getElementById('sop-modal');
+  const content = document.getElementById('modal-content');
+  if (SOP_DATA[key]) {
+    content.innerHTML = `<div class="tag" style="margin-bottom:16px;">Full SOP Document</div><h2 style="font-size:1.5rem;margin-bottom:24px;">${SOP_DATA[key].title}</h2><div class="sop-content">${SOP_DATA[key].content}</div>`;
+  }
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  document.getElementById('sop-modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function closeModalOutside(e) {
+  if (e.target === document.getElementById('sop-modal')) closeModal();
+}
+
+// ============================================================
+// CHAT ADVISOR
+// ============================================================
+function askPrompt(el) {
+  document.getElementById('chat-input').value = el.textContent;
+  sendMessage();
+}
+
+async function sendMessage() {
+  const input = document.getElementById('chat-input');
+  const messages = document.getElementById('chat-messages');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+
+  // Add user message
+  const userMsg = document.createElement('div');
+  userMsg.style.display = 'flex';
+  userMsg.style.justifyContent = 'flex-end';
+  userMsg.innerHTML = `<div class="chat-bubble-user">${escapeHTML(text)}</div>`;
+  messages.appendChild(userMsg);
+
+  // Add typing indicator
+  const typingEl = document.createElement('div');
+  typingEl.style.display = 'flex';
+  typingEl.style.gap = '5px';
+  typingEl.style.alignItems = 'center';
+  typingEl.style.padding = '12px';
+  typingEl.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+  messages.appendChild(typingEl);
+  messages.scrollTop = messages.scrollHeight;
+
+  try {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1000,
+        system: RANCH_KNOWLEDGE,
+        messages: [{ role: "user", content: text }]
+      })
+    });
+
+    const data = await response.json();
+    typingEl.remove();
+
+    const replyText = data.content?.[0]?.text || "I wasn't able to retrieve an answer. Please try again.";
+    
+    const botMsg = document.createElement('div');
+    botMsg.innerHTML = `<div class="chat-bubble-bot">${formatResponse(replyText)}</div>`;
+    messages.appendChild(botMsg);
+    messages.scrollTop = messages.scrollHeight;
+
+  } catch (err) {
+    typingEl.remove();
+    const errMsg = document.createElement('div');
+    errMsg.innerHTML = `<div class="chat-bubble-bot" style="border-color:#5a2a2a;"><strong style="color:#e05252;">Connection error</strong><br/>Unable to reach the Ranch Advisor. Please check your connection and try again.</div>`;
+    messages.appendChild(errMsg);
+    messages.scrollTop = messages.scrollHeight;
+  }
+}
+
+function escapeHTML(text) {
+  return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function formatResponse(text) {
+  // Convert markdown-like formatting to HTML
+  return text
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/^### (.+)$/gm, '<h4 style="margin:12px 0 4px;font-size:0.9rem;color:var(--sage-light);">$1</h4>')
+    .replace(/^## (.+)$/gm, '<h3 style="margin:14px 0 6px;font-size:1rem;color:var(--sage-light);">$1</h3>')
+    .replace(/^- (.+)$/gm, '<li style="margin:3px 0;">$1</li>')
+    .replace(/^(\d+)\. (.+)$/gm, '<li style="margin:3px 0;"><strong>$1.</strong> $2</li>')
+    .replace(/(<li.*<\/li>\n?)+/g, m => `<ul style="margin:8px 0 8px 16px;">${m}</ul>`)
+    .replace(/\n\n/g, '<br/><br/>')
+    .replace(/\n/g, '<br/>');
+}
+
+// ============================================================
+// INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+  const sections = ['overview','vision','summaries','library','advisor'];
+  const navLinks = document.querySelectorAll('.nav-link');
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(id => {
+      const el = document.getElementById(id);
+      if (el && el.getBoundingClientRect().top < 120) current = id;
+    });
+    navLinks.forEach(link => {
+      link.classList.toggle('active', link.getAttribute('onclick')?.includes(current));
+    });
+  });
+});
+</script>
+</body>
+</html>
